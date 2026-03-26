@@ -6,9 +6,14 @@ NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 def obtener_noticias():
+    headers = {'User-Agent': 'Mozilla/5.0'} # Esto engaña a la API para que crea que eres un navegador
     url = f"https://newsapi.org/v2/top-headlines?country=es&apiKey={NEWS_API_KEY}"
-    response = requests.get(url).json()
-    articles = response.get("articles", [])[:5] # Tomamos las 5 mejores
+    response = requests.get(url, headers=headers).json()
+    
+    # Imprime la respuesta en los logs de GitHub para ver qué pasa realmente
+    print(f"Respuesta de la API: {response}") 
+    
+    articles = response.get("articles", [])[:5]
     return articles
 
 def enviar_a_discord(articulos):
