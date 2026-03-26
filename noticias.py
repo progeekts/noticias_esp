@@ -10,7 +10,8 @@ def obtener_noticias():
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
     
     # OPCIONAL: Si 'country=es' sigue dando 0, puedes probar 'language=es'
-    url = f"https://newsapi.org/v2/top-headlines?country=es&apiKey={NEWS_API_KEY}"
+    #url = f"https://newsapi.org/v2/top-headlines?country=es&apiKey={NEWS_API_KEY}"
+    url = f"https://newsapi.org/v2/top-headlines?language=es&q=España&apiKey={NEWS_API_KEY}"
     
     response = requests.get(url, headers=headers)
     data = response.json()
