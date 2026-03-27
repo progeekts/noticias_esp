@@ -49,7 +49,7 @@ def enviar_a_discord(articulos):
         try:
             data = {
                 "content": f"📢 **{art['source']}**: {art['title']}\n🔗 {art['url']}",
-                "username": "Noticias España Bot"
+                "username": "Noticias España"
             }
             # Timeout añadido para la petición a Discord
             r = requests.post(DISCORD_WEBHOOK_URL, json=data, timeout=10)
