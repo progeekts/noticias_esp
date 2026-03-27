@@ -1,8 +1,8 @@
 name: Enviar Noticias Diarias
 on:
   schedule:
-    - cron: '0 9 * * *' # Se ejecuta a las 10:00 o 11:00 AM en España (9 AM UTC)
-  workflow_dispatch: # Permite ejecución manual desde la pestaña Actions
+    - cron: '0 9 * * *' # 9 AM UTC
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' # Acelera las ejecuciones futuras guardando las librerías
+          # Hemos quitado la línea de 'cache' para que no busque archivos que no existen
 
       - name: Instalar dependencias
         run: |
@@ -24,8 +24,5 @@ jobs:
 
       - name: Ejecutar script
         env:
-          # Ya no necesitas NEWS_API_KEY para RSS, pero puedes dejarla si quieres
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          # Forzamos Node 24 para evitar el aviso de depreciación de tus logs anteriores
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true 
         run: python noticias.py
