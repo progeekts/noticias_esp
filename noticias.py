@@ -2,68 +2,63 @@ import requests
 import os
 import feedparser
 
-# Configuración
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
+MEMORIA_FILE = "enviados.txt"
+
+def cargar_memoria():
+    if os.path.exists(MEMORIA_FILE):
+        with open(MEMORIA_FILE, "r") as f:
+            return set(line.strip() for line in f)
+    return set()
+
+def guardar_en_memoria(url):
+    with open(MEMORIA_FILE, "a") as f:
+        f.write(url + "\n")
 
 def obtener_noticias():
-    # Fuentes RSS estables de España
     fuentes = [
         "https://www.rtve.es/noticias/rss/temas/espana.xml",
         "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/espana/portada",
         "https://e00-elmundo.uecdn.es/elmundo/rss/espana.xml"
     ]
     
+    memoria = cargar_memoria()
     articulos = []
     
-    for url in fuentes:
+    for url_fuente in fuentes:
         try:
-            # Añadimos un timeout para que el script no se quede colgado si una web no responde
-            feed = feedparser.parse(url)
+            feed = feedparser.parse(url_fuente)
+            nombre_fuente = getattr(feed.feed, 'title', "Noticias")
             
-            # Verificamos si el feed tiene entradas
-            if not feed.entries:
-                print(f"Aviso: La fuente {url} no devolvió noticias.")
-                continue
-
-            nombre_fuente = getattr(feed.feed, 'title', "Noticias España")
-            
-            for entry in feed.entries[:2]: 
-                # Validamos que existan título y link antes de añadir
-                if hasattr(entry, 'title') and hasattr(entry, 'link'):
+            for entry in feed.entries[:3]:
+                if entry.link not in memoria:
                     articulos.append({
                         'title': entry.title,
                         'url': entry.link,
                         'source': nombre_fuente
                     })
         except Exception as e:
-            print(f"Error procesando {url}: {e}")
+            print(f"Error en {url_fuente}: {e}")
             
     return articulos
 
 def enviar_a_discord(articulos):
-    if not DISCORD_WEBHOOK_URL:
-        print("Error: DISCORD_WEBHOOK_URL no configurado.")
-        return
-
     for art in articulos:
         try:
             data = {
                 "content": f"📢 **{art['source']}**: {art['title']}\n🔗 {art['url']}",
                 "username": "Noticias España"
             }
-            # Timeout añadido para la petición a Discord
             r = requests.post(DISCORD_WEBHOOK_URL, json=data, timeout=10)
-            r.raise_for_status() # Lanza error si Discord responde mal
-            print(f"Enviado: {art['title'][:30]}... OK")
+            if r.status_code == 204 or r.status_code == 200:
+                guardar_en_memoria(art.get('url'))
+                print(f"Enviado y guardado: {art['title'][:30]}...")
         except Exception as e:
-            print(f"Fallo al enviar a Discord: {e}")
+            print(f"Error enviando: {e}")
 
 if __name__ == "__main__":
-    print("Iniciando bot de noticias...")
     noticias = obtener_noticias()
-    
     if noticias:
-        print(f"Se encontraron {len(noticias)} noticias en total.")
         enviar_a_discord(noticias)
     else:
-        print("No se pudo obtener ninguna noticia de las fuentes.")
+        print("No hay noticias nuevas.")
