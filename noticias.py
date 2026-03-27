@@ -1,27 +1,22 @@
 import requests
 import os
-
+import feedparser
 # Configuración
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 
 def obtener_noticias():
-    # AÑADIDO: User-Agent para evitar que la API bloquee la petición desde GitHub
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    # URL del RSS de noticias de última hora de RTVE
+    url_rss = "https://www.rtve.es/noticias/rss/temas/espana.xml"
+    feed = feedparser.parse(url_rss)
     
-    # OPCIONAL: Si 'country=es' sigue dando 0, puedes probar 'language=es'
-    #url = f"https://newsapi.org/v2/top-headlines?country=es&apiKey={NEWS_API_KEY}"
-    url = f"https://newsapi.org/v2/top-headlines?language=es&q=España&apiKey={NEWS_API_KEY}"
-    
-    response = requests.get(url, headers=headers)
-    data = response.json()
-    
-    # Imprimimos para ver en los logs si hay algún mensaje de error específico
-    print(f"Status Code: {response.status_code}")
-    print(f"Datos recibidos: {data}")
-    
-    articles = data.get("articles", [])[:5]
-    return articles
+    articulos = []
+    for entry in feed.entries[:5]: # Tomamos las 5 más recientes
+        articulos.append({
+            'title': entry.title,
+            'url': entry.link
+        })
+    return articulos
 
 def enviar_a_discord(articulos):
     for art in articulos:
