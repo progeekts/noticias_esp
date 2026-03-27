@@ -1,7 +1,7 @@
 name: Enviar Noticias Diarias
 on:
   schedule:
-    - cron: '0 9 * * *' # 9 AM UTC
+    - cron: '0 9 * * *' 
   workflow_dispatch: 
 
 jobs:
@@ -15,14 +15,15 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' # Ahora sí encontrará el archivo requirements.txt
-
+          # Eliminamos el caché temporalmente para asegurar una instalación limpia
+          
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install requests feedparser
 
       - name: Ejecutar script
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        # Aquí nos aseguramos de llamar al python del entorno correcto
         run: python noticias.py
